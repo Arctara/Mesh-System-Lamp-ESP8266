@@ -12,6 +12,10 @@
 #define zerocross 12
 #define feedbackPin A0
 
+//* Device Name
+const String deviceName = "lamp-1";
+const String centerName = "center";
+
 unsigned long prevMillis = 0;
 int sensorRead = 0;
 String feedback;
@@ -64,8 +68,8 @@ void loop() {
 }
 
 void sendMessage() {
-  data["from"] = "lamp-1";
-  data["to"] = "center";
+  data["from"] = deviceName;
+  data["to"] = centerName;
   data["feedback"] = feedback;
   String msg;
   serializeJson(data, msg);
