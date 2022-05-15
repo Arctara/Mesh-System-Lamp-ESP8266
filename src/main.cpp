@@ -12,10 +12,6 @@
 #define zerocross 12
 #define feedbackPin A0
 
-//* Device Name
-const String deviceName = "lamp-1";
-const String centerName = "center";
-
 unsigned long prevMillis = 0;
 int sensorRead = 0;
 String feedback;
@@ -52,24 +48,35 @@ void setup() {
 void loop() {
   webSocket.loop();
 
-  sensorRead = analogRead(feedbackPin);
+  if (millis() - prevMillis >= 1000) {
+    prevMillis = millis();
 
-  if (sensorRead < 200) {
-    feedback = "ON";
-  } else if (sensorRead >= 200) {
-    feedback = "OFF";
+    if (webSocket.isConnected()) {
+      Serial.println("WebSocket Connected");
+    } else {
+      Serial.println("Connecting (Please Connect)");
+      webSocket.begin("192.168.5.1", 80, "/ws");
+    }
+
+    sensorRead = analogRead(feedbackPin);
+
+    if (sensorRead < 200) {
+      feedback = "ON";
+    } else if (sensorRead >= 200) {
+      feedback = "OFF";
+    }
+
+    if (feedback != prevFeedback) {
+      sendMessage();
+    }
+
+    prevFeedback = feedback;
   }
-
-  if (feedback != prevFeedback) {
-    sendMessage();
-  }
-
-  prevFeedback = feedback;
 }
 
 void sendMessage() {
-  data["from"] = deviceName;
-  data["to"] = centerName;
+  data["from"] = "lamp-1";
+  data["to"] = "center";
   data["feedback"] = feedback;
   String msg;
   serializeJson(data, msg);
