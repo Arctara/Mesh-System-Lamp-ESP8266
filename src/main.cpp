@@ -10,12 +10,12 @@
 
 #define outputPin 14
 #define zerocross 12
-#define feedbackPin A0
+#define statePin A0
 
 unsigned long prevMillis = 0;
 int sensorRead = 0;
-String feedback;
-String prevFeedback = "OFF";
+bool state;
+bool prevState = false;
 
 bool lampCondition = false;
 
@@ -30,7 +30,7 @@ void webSocketEvent(WStype_t type, uint8_t* payload, size_t length);
 
 void setup() {
   Serial.begin(115200);
-  pinMode(feedbackPin, INPUT);
+  pinMode(statePin, INPUT);
 
   dimmer.begin(NORMAL_MODE, ON);
 
@@ -58,26 +58,26 @@ void loop() {
       webSocket.begin("192.168.5.1", 80, "/ws");
     }
 
-    sensorRead = analogRead(feedbackPin);
+    sensorRead = analogRead(statePin);
 
     if (sensorRead < 200) {
-      feedback = "ON";
+      state = true;
     } else if (sensorRead >= 200) {
-      feedback = "OFF";
+      state = false;
     }
 
-    if (feedback != prevFeedback) {
+    if (state != prevState) {
       sendMessage();
     }
 
-    prevFeedback = feedback;
+    prevState = state;
   }
 }
 
 void sendMessage() {
   data["from"] = "lamp-1";
   data["to"] = "center";
-  data["feedback"] = feedback;
+  data["state"] = state;
   String msg;
   serializeJson(data, msg);
   webSocket.sendTXT(msg);
